@@ -27,7 +27,7 @@ const APPS = [
  ["review","acme-review-agent",{contents:"read",pull_requests:"write",checks:"write"},[]],
  ["qa","acme-qa-agent",{contents:"write",pull_requests:"write",checks:"write",deployments:"read"},[]],
  ["gate","acme-sox-gate",{checks:"write",contents:"read",pull_requests:"read",deployments:"write",actions:"read",statuses:"read",attestations:"read"},["deployment_protection_rule"]],
- ["reconciler","acme-sox-reconciler",{administration:"read",contents:"read",pull_requests:"read",checks:"read",statuses:"read",deployments:"read",actions:"read",environments:"read",attestations:"read"},[]],
+ ["reconciler","acme-sox-reconciler",{administration:"read",contents:"read",pull_requests:"read",checks:"read",statuses:"read",deployments:"read",actions:"read",environments:"read",attestations:"read",secrets:"read"},[]],
 ];
 function saved(){try{return JSON.parse(localStorage.getItem('soxcodes')||'{}')}catch(e){return {}}}
 const q = new URLSearchParams(location.search);
