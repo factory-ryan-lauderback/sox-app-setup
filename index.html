@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Acme Lending sandbox: create agent GitHub Apps</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:880px;margin:2rem auto;padding:0 1rem;color:#1b1b1b}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:.5rem;vertical-align:top;text-align:left}
+button{padding:.4rem .8rem;cursor:pointer}code{background:#f3f3f3;padding:0 .2rem}
+#codes{width:100%;height:9rem;font-family:monospace}.done{background:#e8f6e8}
+.note{background:#fff8e1;border:1px solid #f0d000;padding:.6rem}
+</style></head><body>
+<h1>Create the 7 agent GitHub Apps</h1>
+<p class="note">Be signed in to github.com as <b>factory-ryan-lauderback</b>. For each row: click <b>Create</b>, then click the green
+<b>Create GitHub App for factory-ryan-lauderback</b> button on GitHub. You come back here with the code saved. Then click <b>Install</b>, pick
+<b>Only select repositories</b> and choose <code>sox-sdlc-sandbox</code>, and click <b>Install</b>. When all 7 rows are green, copy the box at the bottom
+and send it back. The codes are single use and expire 1 hour after creation.</p>
+<table id="t"><tr><th>Role</th><th>App name</th><th>Permissions (repository)</th><th>Step 1</th><th>Step 2</th></tr></table>
+<h2>Codes to send back</h2>
+<textarea id="codes" readonly></textarea>
+<p><button onclick="navigator.clipboard.writeText(document.getElementById('codes').value)">Copy</button>
+<button onclick="if(confirm('Clear saved codes?')){localStorage.removeItem('soxcodes');render()}">Clear</button></p>
+<script>
+const HERE = location.origin + location.pathname;
+const REPO = "https://github.com/factory-ryan-lauderback/sox-sdlc-sandbox";
+const APPS = [
+ ["techlead","acme-techlead-agent",{contents:"read",pull_requests:"write"},[]],
+ ["release_bundler","acme-release-bundler",{contents:"write",pull_requests:"write"},[]],
+ ["dev","acme-dev-agent",{contents:"write",pull_requests:"write"},[]],
+ ["review","acme-review-agent",{contents:"read",pull_requests:"write",checks:"write"},[]],
+ ["qa","acme-qa-agent",{contents:"write",pull_requests:"write",checks:"write",deployments:"read"},[]],
+ ["gate","acme-sox-gate",{checks:"write",contents:"read",pull_requests:"read",deployments:"write",actions:"read",statuses:"read",attestations:"read"},["deployment_protection_rule"]],
+ ["reconciler","acme-sox-reconciler",{administration:"read",contents:"read",pull_requests:"read",checks:"read",statuses:"read",deployments:"read",actions:"read",environments:"read",attestations:"read"},[]],
+];
+function saved(){try{return JSON.parse(localStorage.getItem('soxcodes')||'{}')}catch(e){return {}}}
+const q = new URLSearchParams(location.search);
+if (q.get('code') && q.get('state')) { const s=saved(); s[q.get('state')]=q.get('code'); localStorage.setItem('soxcodes',JSON.stringify(s)); history.replaceState(null,'',HERE); }
+function render(){
+  const s=saved(), t=document.getElementById('t');
+  t.querySelectorAll('tr.app').forEach(r=>r.remove());
+  for (const [role,name,perms,events] of APPS){
+    const manifest={name, url:REPO, description:`Acme Lending sandbox agent identity: ${role}`, public:false,
+      hook_attributes:{url:REPO, active:false}, redirect_url:HERE, default_permissions:Object.assign({metadata:"read"},perms), default_events:events};
+    const tr=document.createElement('tr'); tr.className='app'+(s[role]?' done':'');
+    const f=document.createElement('form'); f.method='post'; f.action='https://github.com/settings/apps/new?state='+encodeURIComponent(role);
+    const i=document.createElement('input'); i.type='hidden'; i.name='manifest'; i.value=JSON.stringify(manifest); f.appendChild(i);
+    const b=document.createElement('button'); b.textContent=s[role]?'Created ✓':'Create'; f.appendChild(b);
+    tr.innerHTML=`<td>${role}</td><td><code>${name}</code></td><td>${Object.entries(perms).map(([k,v])=>k+':'+v).join(', ')}</td><td></td>
+      <td><a target="_blank" href="https://github.com/apps/${name}/installations/new">Install</a></td>`;
+    tr.children[3].appendChild(f); t.appendChild(tr);
+  }
+  document.getElementById('codes').value = APPS.map(([r])=>s[r]?`${r}=${s[r]}`:null).filter(Boolean).join('\n');
+}
+render();
+</script></body></html>
